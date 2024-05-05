@@ -6,64 +6,101 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.linear_model as lm
 import pandas as pd
-import math
 
 from keras import layers
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error, r2_score, \
-    classification_report, confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score
+
+'''
+diabetes = pd.read_csv('pima-indians-diabetes.csv')
+data = np.array(diabetes)
+data.shape[0]
+
+b)
+np.set_printoptions(suppress=True, precision=2)
+unique = np.unique(data, axis=0)
+unique = unique[unique[:,5] != 0]
+unique = unique[unique[:,7] != 0]
+
+c)
+plt.plot()
+plt.scatter(unique[:,5], unique[:,7], color="black")
+plt.xlabel("BMI")
+plt.ylabel("age")
+plt.title("pito")
+plt.show()
+
+d)
+print(unique[:,5].min(), unique[:,5].argmin())
+print(unique[:,5].max(), unique[:,5].argmax())
+'''
 
 # a)
-data = np.loadtxt('pima-indians-diabetes.csv', delimiter=",", dtype=float, skiprows=1)
-data = data[1::]
+print("=====================================================")
+print("\nZadatak 0.0.1 pod a)")
+data = np.loadtxt('pima-indians-diabetes.csv', delimiter=",", dtype="str", skiprows=9)
 data = np.array(data, np.float64)
-print(f"Broj izmjerenih ljudi: {len(data)}")
+print(f"\nBroj izmjerenih ljudi: {len(data)}")
 
 # b)
-data = pd.read_csv('pima-indians-diabetes.csv')
-print(f'\nIzostale vrijednosti: {data.isnull().sum()}')
-print(f'Izostale vrijednosti: {data.isnull().sum()}')
+print("=====================================================")
+print("\nZadatak 0.0.1 pod b)")
+df = pd.DataFrame(data)
+print(f'\nBroj izlostalih vrijednosti: {df.isnull().sum()}')
+print(f'Broj dupliciranih vrijednosti: {df.duplicated().sum()}')
 
-print(f'Duplicirane vrijednosti: {data.duplicated().sum()}')
-print(f'Duplicirane vrijednosti: {data.duplicated().sum()}')
+df = df.drop_duplicates()
+df = df.dropna(axis=0)                          # treba izbacit sve 0 iz BMI
+
+data = data[data[:, 5] != 0.0]                  # izbacivanje sve s 0.0 BMI
+data = data[data[:, 7] != 0.0]                  # izbacivanje sve s 0.0 BMI
+df = pd.DataFrame(data)                         # ponovno kreiranje df ali ovaj put s ociscenim podacima bez redaka s BMI 0.0
+print(f'Broj preostalih: {len(df)}')
 
 # c)
-plt.scatter(data['BMI'], data['Age'], color='blue', alpha=0.8)
+print("=====================================================")
+print("\nZadatak 0.0.1 pod c)")
+plt.figure()
+plt.scatter(x=data[:, 7], y=data[:, 5], color='blue', alpha=0.7)
 plt.xlabel('BMI')
 plt.ylabel('Age')
 plt.title('BMI vs Age')
 plt.show()
 
 # d)
-print(f'\nSrednja vrijednost: {data['BMI'].mean()}')
-print(f'Min vrijednost: {data['BMI'].min()}')
-print(f'Max vrijednost: {data['BMI'].max()}')
+print("=====================================================")
+print("\nZadatak 0.0.1 pod d)")
+print(f'Srednja vrijednost: {df[5].mean()}')
+print(f'Min vrijednost: {df[5].min()}')
+print(f'Max vrijednost: {df[5].max()}')
 
 # e)
-selectedDiabetes = data[(data['Outcome'] == 1)]
-selectedNonDiabetes = data[(data['Outcome'] == 0)]
-
-print(f'\nSrednja vrijednost (D): {selectedDiabetes['BMI'].mean()}')
-print(f'Min vrijednost (D): {selectedDiabetes['BMI'].min()}')
-print(f'Max vrijednost (D): {selectedDiabetes['BMI'].max()}')
-
-print(f'\nSrednja vrijednost (ND): {selectedNonDiabetes['BMI'].mean()}')
-print(f'Min vrijednost (ND): {selectedNonDiabetes['BMI'].min()}')
-print(f'Max vrijednost (ND): {selectedNonDiabetes['BMI'].max()}')
+print("=====================================================")
+print("\nZadatak 0.0.1 pod e)")
+selectedDiabetes = df[(df[8] == 1)]
+selectedNonDiabetes = df[(df[8] == 0)]
 
 print(f'\nBroj ljudi s dijabetesom: {len(selectedDiabetes)}')
+
+print(f'\nSrednja vrijednost (D): {selectedDiabetes[5].mean()}')
+print(f'Min vrijednost (D): {selectedDiabetes[5].min()}')
+print(f'Max vrijednost (D): {selectedDiabetes[5].max()}')
+
+print(f'\nSrednja vrijednost (ND): {selectedNonDiabetes[5].mean()}')
+print(f'Min vrijednost (ND): {selectedNonDiabetes[5].min()}')
+print(f'Max vrijednost (ND): {selectedNonDiabetes[5].max()}')
 
 '''
 ZADATAK 0.0.2
 '''
-data = np.loadtxt('pima-indians-diabetes.csv', delimiter=",", dtype=float, skiprows=1)
+data = np.loadtxt('pima-indians-diabetes.csv', delimiter=",", dtype=np.float64, skiprows=9)
 
 # a)
 X = data[:, :-1]
 y = data[:, -1]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
 linearModel = lm.LogisticRegression(max_iter=1000)
 linearModel.fit(X_train, y_train)
 #print(linearModel.coef_)
@@ -109,10 +146,19 @@ history = model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, vali
 print()
 
 # d)
-
+model.save('FCN/zad_model.h5')
 
 # e)
+model = keras.models.load_model('FCN/zad_model.h5')
 
+evaluation = model.evaluate(X_test, y_test)
+
+print("Loss:", evaluation[0])
+print("Accuracy:", evaluation[1])
 
 # f)
-
+y_pred = model.predict(X_test)
+y_pred = np.around(y_pred).astype(np.int32)
+disp = ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred))
+disp.plot()
+plt.show()
